@@ -37,9 +37,9 @@ estimateCellCounts <- function (rgSet, compositeCellType = "Blood",
     
 	if (compositeCellType=="CordBlood"){
     if(verbose) cat("[estimateCellCounts] Processing user and reference data together.\n")
-    combinedMset <- preprocessNoob(combinedRGset) 
-	data(FlowSorted.CordBlood.450k.compTable)
-	combinedMset <- combinedMset[which(rownames(combinedMset)%in%rownames(FlowSorted.CordBlood.450k.compTable)),]
+    combinedMset <- preprocessNoob(combinedRGset)
+	compTable <- get(paste(referencePkg,".compTable",sep="")) 
+	combinedMset <- combinedMset[which(rownames(combinedMset)%in%rownames(compTable)),]
     rm(combinedRGset)} else {
 	if(verbose) cat("[estimateCellCounts] Normalizing user and reference data together.\n")
     combinedMset <- preprocessQuantile(combinedRGset, removeBadSamples = FALSE,

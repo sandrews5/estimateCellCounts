@@ -17,7 +17,7 @@ estimateCellCounts(rgSet, compositeCellType = "Blood",
   \item{rgSet}{The input \code{RGChannelSet} for the procedure.}
   \item{compositeCellType}{Which composite cell type is being deconvoluted. Should
 	be one of "Blood", "CordBlood", or "DLPFC". See details. }
-  \item{cellTypes}{Which celltypes, from the reference object, should be
+  \item{cellTypes}{Which cell types, from the reference object, should be
     we use for the deconvolution? See details. }
   \item{returnAll}{Should the composition table and the normalized user
     supplied data be return?}
@@ -38,7 +38,9 @@ killer cells, monocytes,  granulocytes, and b-cells in each sample.
 
 The function currently supports cell composition estimation for blood, cord blood, and 
 the frontal cortex, through \code{compositeCellType} values of "Blood", "CordBlood", and 
-"DLPFC", respectively. Each tissue supports the estimation of different cell types, delimited 
+"DLPFC", respectively. Packages containing the appropriate reference data should be installed 
+before running the function for the first time ("FlowSorted.Blood.450k", "FlowSorted.DLPFC.450k",
+"FlowSorted.CordBlood.450k"). Each tissue supports the estimation of different cell types, delimited 
 via the \code{cellTypes} argument. For blood, these are "Bcell", "CD4T", "CD8T", "Eos", "Gran",
 "Mono", "Neu", and "NK" (though the default value for \code{cellTypes} is often sufficient).
 For cord blood, these are "Bcell", "CD4T", "CD8T", "Gran", "Mono", "Neu", and "nRBC". For frontal 
@@ -76,9 +78,10 @@ batch effects.
   Genome Biology (2014) 15:R31.
   doi:\href{http://www.dx.doi.org/10.1186/gb-2014-15-2-r31}{10.1186/gb-2014-15-2-r31}.
   
-  Bakulski KM, Feinberg JI, Yang J, Brown S, Andrews SV, McKenney S, Witter F, Walston J, Feinberg AP, Fallin MD. 
-	\emph{DNA methylation of cord blood cell types: Applications for mixed cell birth studies.}
-	Manuscript in review.
+  KM Bakulski, JI Feinberg, SV Andrews, J Yang, S Brown, S McKenney, 
+  F Witter, J Walston, AP Feinberg, and MD Fallin. 
+  \emph{DNA methylation of cord blood cell types: Applications for mixed cell birth studies.}
+  Manuscript in review.
 }
 
 \author{
