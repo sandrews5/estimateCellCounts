@@ -1,16 +1,25 @@
-estimateCellCounts <- function (rgSet, compositeCellType = "Blood", processMethod = "auto", probeSelect = "auto",
-                                cellTypes = c("CD8T","CD4T", "NK","Bcell","Mono","Gran"),
+#compositeCellType should be
+#"Hopkins"
+#"Norway"
+#"Canada"
+#"Hopkins&Norway"
+#"Hopkins&Canada"
+#"Canada&Norway"
+#"Hopkins&Canada&Norway"
+
+estimateCellCountsRevised <- function (rgSet, compositeCellType = "Hopkins", processMethod = "auto", probeSelect = "auto",
+                                cellTypes = c("CD8T","CD4T", "NK","Bcell","Mono","Gran"), 
                                 returnAll = FALSE, meanPlot = FALSE, verbose=TRUE, ...) {
     platform <- sub("IlluminaHumanMethylation", "", annotation(rgSet)[which(names(annotation(rgSet))=="array")])
-    if((compositeCellType == "CordBlood") && (!"nRBC" %in% cellTypes))
-        cat("[estimateCellCounts] Consider including 'nRBC' in argument 'cellTypes' for cord blood estimation.\n")   
-    referencePkg <- sprintf("FlowSorted.%s.%s", compositeCellType, platform)
-    subverbose <- max(as.integer(verbose) - 1L, 0L)
-    if(!require(referencePkg, character.only = TRUE))
-        stop(sprintf("Could not find reference data package for compositeCellType '%s' and platform '%s' (inferred package name is '%s')",
-                     compositeCellType, platform, referencePkg))
-    data(list = referencePkg) 
-    referenceRGset <- get(referencePkg) 
+	subverbose <- max(as.integer(verbose) - 1L, 0L)
+	
+	datasets <- unlist(strsplit(compositeCellType,"&"))
+	datasets <- lapply(datasets,function(x){return(paste0("RGset.",x))})
+	referenceRGset <- lapply(datasets,function(x){get(x)})
+	if(length(datasets)==3){referenceRGset <- combine(referenceRGset[[1]],referenceRGset[[2]],referenceRGset[[3]])}
+	if(length(datasets)==2){referenceRGset <- combine(referenceRGset[[1]],referenceRGset[[2]])}
+	if(length(datasets)==1){referenceRGset <- referenceRGset[[1]]}
+	
     if(! "CellType" %in% names(pData(referenceRGset)))
         stop(sprintf("the reference sorted dataset (in this case '%s') needs to have a phenoData column called 'CellType'"),
              names(referencePkg))
@@ -26,10 +35,10 @@ estimateCellCounts <- function (rgSet, compositeCellType = "Blood", processMetho
     if ((processMethod == "auto") && (!compositeCellType %in% c("Blood", "DLPFC")))
         processMethod <- "preprocessNoob"
     processMethod <- get(processMethod)
-    if ((probeSelect == "auto") && (compositeCellType == "CordBlood")){
+    if ((probeSelect == "auto") && (compositeCellType %in% c("Blood", "DLPFC"))){
+        probeSelect <- "both"} 
+    if ((probeSelect == "auto") && (!compositeCellType %in% c("Blood", "DLPFC"))){
         probeSelect <- "any"} 
-    if ((probeSelect == "auto") && (compositeCellType != "CordBlood")){
-        probeSelect <- "both"} 	
     
     if(verbose) cat("[estimateCellCounts] Combining user data with reference (flow sorted) data.\n")
     newpd <- data.frame(sampleNames = c(sampleNames(rgSet), sampleNames(referenceRGset)),
@@ -44,16 +53,12 @@ estimateCellCounts <- function (rgSet, compositeCellType = "Blood", processMetho
     rm(referenceRGset)
     
     if(verbose) cat("[estimateCellCounts] Processing user and reference data together.\n")
-    if (compositeCellType == "CordBlood"){
-        ## Here Shan wants to discard probes that they have decided shouldn't be used, for example multi-mapping probes
-        ## This is done by only using probes with names in the comptable.
-        ## This is kind of ugly, and dataset dependent.
-        combinedMset <- processMethod(combinedRGset, verbose=subverbose)
-	compTable <- get(paste0(referencePkg, ".compTable"))
-	combinedMset <- combinedMset[which(rownames(combinedMset) %in% rownames(compTable)),]
-    } else {
-        combinedMset <- processMethod(combinedRGset) 
-    }
+    datasets <- unlist(strsplit(compositeCellType,"&"))
+	datasets <- lapply(datasets,function(x){return(paste0("drop.",x))})
+	compTable <- unique(unlist(lapply(datasets,function(x){get(x)})))
+	combinedMset <- processMethod(combinedRGset, verbose=subverbose)
+	combinedMset <- combinedMset[which(!rownames(combinedMset) %in% compTable),]
+	print(dim(combinedMset))
     rm(combinedRGset)
     
     ## Extracts normalized reference data 
